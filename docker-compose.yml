@@ -1,0 +1,22 @@
+services:
+  onnx-api-dev:
+    build: .
+    container_name: onnx-api-dev
+    ports:
+      - "8001:8000"
+    env_file:
+      - .env
+    environment:
+      APP_ENV: dev
+      PREDICTION_LOG_PATH: predictions_dev.txt
+
+  onnx-api-prod:
+    build: .
+    container_name: onnx-api-prod
+    ports:
+      - "8002:8000"
+    env_file:
+      - .env
+    environment:
+      APP_ENV: prod
+      PREDICTION_LOG_PATH: predictions_prod.txt

@@ -1,0 +1,77 @@
+name: Test, Build and Deploy PROD
+
+on:
+  push:
+    branches: ["prod"]
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  test-build-deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      APP_ENV: prod
+      MODEL_URL: ${{ secrets.MODEL_URL }}
+      TEST_IMAGE_URL: ${{ secrets.TEST_IMAGE_URL }}
+      TEST_IMAGE_PATH: data/test/car_test.jpg
+      PREDICTION_LOG_PATH: predictions_prod.txt
+      PREDICTION_BUCKET: ${{ secrets.PREDICTION_BUCKET }}
+      PREDICTION_BUCKET_KEY: predictions/predictions_prod.txt
+      MIN_CONFIDENCE: "0.10"
+      IMAGE_NAME: ghcr.io/${{ github.repository }}/onnx-api-prod:latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Download test data from external storage
+        run: python scripts/download_test_data.py
+
+      - name: Run unit tests
+        run: pytest tests/ -q
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Docker image
+        run: docker build -t $IMAGE_NAME .
+
+      - name: Push Docker image
+        run: docker push $IMAGE_NAME
+
+      - name: Deploy PROD container on cloud server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            docker pull ${{ env.IMAGE_NAME }}
+            docker stop onnx-api-prod || true
+            docker rm onnx-api-prod || true
+            docker run -d \
+              --name onnx-api-prod \
+              --restart unless-stopped \
+              -p 8002:8000 \
+              -e APP_ENV=prod \
+              -e MODEL_URL="${{ secrets.MODEL_URL }}" \
+              -e PREDICTION_LOG_PATH="predictions_prod.txt" \
+              -e PREDICTION_BUCKET="${{ secrets.PREDICTION_BUCKET }}" \
+              -e PREDICTION_BUCKET_KEY="predictions/predictions_prod.txt" \
+              ${{ env.IMAGE_NAME }}
