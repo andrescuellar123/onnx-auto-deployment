@@ -10,6 +10,8 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
+      # Model used by the test stage (can differ from the production MODEL_URL).
+      MODEL_URL: ${{ secrets.TEST_MODEL }}
       TEST_IMAGE_URL: ${{ secrets.TEST_IMAGE_URL }}
       PREDICTION_LOG_PATH: predictions_dev.txt
 

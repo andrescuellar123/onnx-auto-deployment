@@ -31,11 +31,14 @@ Required:
 
 ```text
 MODEL_URL
+TEST_MODEL
 TEST_IMAGE_URL
 EC2_HOST
 EC2_USER
 EC2_SSH_KEY
 ```
+
+`TEST_MODEL` is the ONNX model downloaded for the `test` stage (can be the same as `MODEL_URL` or a smaller one for faster CI runs).
 
 Optional for S3 prediction logs:
 

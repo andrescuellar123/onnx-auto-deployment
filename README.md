@@ -210,11 +210,14 @@ Required secrets:
 
 ```text
 MODEL_URL
+TEST_MODEL
 TEST_IMAGE_URL
 EC2_HOST
 EC2_USER
 EC2_SSH_KEY
 ```
+
+`MODEL_URL` is the model deployed to the running container. `TEST_MODEL` is the model downloaded during the `test` stage (it can point to the same file or to a smaller/faster ONNX model for CI).
 
 Optional S3 log secrets:
 
