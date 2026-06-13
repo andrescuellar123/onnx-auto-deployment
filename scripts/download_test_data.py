@@ -14,7 +14,12 @@ def download_from_url(url: str, destination: Path) -> None:
     parsed = urlparse(url)
 
     if parsed.scheme == "s3":
-        boto3.client("s3").download_file(parsed.netloc, parsed.path.lstrip("/"), str(destination))
+        # Fall back to us-east-1 if AWS_DEFAULT_REGION/AWS_REGION are unset or empty;
+        # boto3 auto-redirects to the bucket's real region on s3.* requests.
+        region = os.getenv("AWS_DEFAULT_REGION") or os.getenv("AWS_REGION") or "us-east-1"
+        boto3.client("s3", region_name=region).download_file(
+            parsed.netloc, parsed.path.lstrip("/"), str(destination)
+        )
     else:
         urllib.request.urlretrieve(url, destination)
 
