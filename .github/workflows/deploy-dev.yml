@@ -14,6 +14,10 @@ jobs:
       MODEL_URL: ${{ secrets.TEST_MODEL }}
       TEST_IMAGE_URL: ${{ secrets.TEST_IMAGE_URL }}
       PREDICTION_LOG_PATH: predictions_dev.txt
+      # Needed by boto3 to fetch s3:// URIs (MODEL_URL/TEST_IMAGE_URL) in the test stage.
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
 
     steps:
       - name: Checkout repository

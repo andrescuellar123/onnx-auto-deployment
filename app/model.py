@@ -1,7 +1,9 @@
 import os
 import urllib.request
 from pathlib import Path
+from urllib.parse import urlparse
 
+import boto3
 import numpy as np
 import onnxruntime as ort
 
@@ -9,6 +11,16 @@ from app.config import settings
 from app.preprocessing import preprocess_image
 
 _session: ort.InferenceSession | None = None
+
+
+def download_from_url(url: str, destination: Path) -> None:
+    """Download a file from an http(s) URL or an s3://bucket/key URI."""
+    parsed = urlparse(url)
+
+    if parsed.scheme == "s3":
+        boto3.client("s3").download_file(parsed.netloc, parsed.path.lstrip("/"), str(destination))
+    else:
+        urllib.request.urlretrieve(url, destination)
 
 
 def download_model() -> Path:
@@ -26,7 +38,7 @@ def download_model() -> Path:
         )
 
     print(f"Downloading ONNX model from {settings.model_url}")
-    urllib.request.urlretrieve(settings.model_url, model_path)
+    download_from_url(settings.model_url, model_path)
 
     if not model_path.exists() or model_path.stat().st_size == 0:
         raise RuntimeError("The ONNX model could not be downloaded correctly.")

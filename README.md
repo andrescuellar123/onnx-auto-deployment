@@ -13,6 +13,9 @@ Automate the deployment of an ONNX model so users can consume it through HTTP en
 - The ONNX model is **not stored in this repository**.
 - The model is downloaded from external storage using the `MODEL_URL` environment variable.
 - Test data is also downloaded from external storage using `TEST_IMAGE_URL`.
+- `MODEL_URL`, `TEST_MODEL` and `TEST_IMAGE_URL` accept either an `http(s)://` URL or an
+  `s3://bucket/key` URI. S3 URIs require `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and
+  `AWS_DEFAULT_REGION` to be available to the process doing the download.
 - There are two branches and two deployment environments:
   - `dev` for development.
   - `prod` for production.
