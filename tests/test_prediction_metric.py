@@ -6,7 +6,7 @@ from app.model import predict_image
 
 
 def test_prediction_metric_with_external_test_image():
-    test_image_path = Path(os.getenv("TEST_IMAGE_PATH", "data/test/car_test.jpg"))
+    test_image_path = Path(os.getenv("TEST_IMAGE_PATH", "data/test/test_img.jpg"))
 
     assert test_image_path.exists(), (
         "The test image must be downloaded from external storage before running tests. "

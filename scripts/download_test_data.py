@@ -6,7 +6,7 @@ from urllib.parse import urlparse
 import boto3
 
 TEST_IMAGE_URL = os.getenv("TEST_IMAGE_URL")
-TEST_IMAGE_PATH = Path(os.getenv("TEST_IMAGE_PATH", "data/test/car_test.jpg"))
+TEST_IMAGE_PATH = Path(os.getenv("TEST_IMAGE_PATH", "data/test/test_img.jpg"))
 
 
 def download_from_url(url: str, destination: Path) -> None:

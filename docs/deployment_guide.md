@@ -20,7 +20,7 @@ Upload these files to external storage, for example AWS S3:
 
 ```text
 models/resnet50.onnx
-test-data/car_test.jpg
+test-data/test_img.jpg
 ```
 
 The ONNX model must not be stored in GitHub.
@@ -120,5 +120,5 @@ Prediction example:
 
 ```bash
 curl -X POST "http://SERVER_IP:8001/predict" \
-  -F "file=@car_test.jpg"
+  -F "file=@test_img.jpg"
 ```

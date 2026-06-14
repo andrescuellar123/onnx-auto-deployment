@@ -4,7 +4,7 @@ from pathlib import Path
 import requests
 
 ENDPOINT_URL = os.getenv("ENDPOINT_URL", "http://localhost:8000/predict")
-TEST_IMAGE_PATH = Path(os.getenv("TEST_IMAGE_PATH", "data/test/car_test.jpg"))
+TEST_IMAGE_PATH = Path(os.getenv("TEST_IMAGE_PATH", "data/test/test_img.jpg"))
 
 
 def main() -> None:

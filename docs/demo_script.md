@@ -57,7 +57,7 @@ And a prediction:
 
 ```bash
 curl -X POST "http://SERVER_IP:8001/predict" \
-  -F "file=@car_test.jpg"
+  -F "file=@test_img.jpg"
 ```
 
 ## 6. Prediction logs

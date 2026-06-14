@@ -54,7 +54,7 @@ GitHub repository
 │   └── resnet50.onnx
 │
 ├── External test data storage
-│   └── car_test.jpg
+│   └── test_img.jpg
 │
 └── Cloud server
     ├── DEV endpoint  -> http://SERVER_IP:8001
@@ -120,7 +120,7 @@ Example:
 
 ```bash
 curl -X POST "http://SERVER_IP:8001/predict" \
-  -F "file=@data/test/car_test.jpg"
+  -F "file=@data/test/test_img.jpg"
 ```
 
 ## Local execution
@@ -157,14 +157,14 @@ Linux/macOS:
 
 ```bash
 export MODEL_URL="https://your-bucket.s3.amazonaws.com/models/resnet50.onnx"
-export TEST_IMAGE_URL="https://your-bucket.s3.amazonaws.com/test-data/car_test.jpg"
+export TEST_IMAGE_URL="https://your-bucket.s3.amazonaws.com/test-data/test_img.jpg"
 ```
 
 Windows PowerShell:
 
 ```powershell
 $env:MODEL_URL="https://your-bucket.s3.amazonaws.com/models/resnet50.onnx"
-$env:TEST_IMAGE_URL="https://your-bucket.s3.amazonaws.com/test-data/car_test.jpg"
+$env:TEST_IMAGE_URL="https://your-bucket.s3.amazonaws.com/test-data/test_img.jpg"
 ```
 
 5. Download the test data.
@@ -189,7 +189,7 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000
 
 ```bash
 curl -X POST "http://localhost:8000/predict" \
-  -F "file=@data/test/car_test.jpg"
+  -F "file=@data/test/test_img.jpg"
 ```
 
 ## Docker execution
