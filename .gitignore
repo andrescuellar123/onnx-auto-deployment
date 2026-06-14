@@ -6,3 +6,4 @@ models/*.onnx
 data/test/*
 predictions*.txt
 *.log
+docs/
