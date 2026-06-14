@@ -13,7 +13,7 @@ class Settings:
     prediction_bucket: str | None = os.getenv("PREDICTION_BUCKET")
     prediction_bucket_key: str | None = os.getenv("PREDICTION_BUCKET_KEY")
     expected_class_ids: str | None = os.getenv("EXPECTED_CLASS_IDS")
-    min_confidence: float = float(os.getenv("MIN_CONFIDENCE", "0.10"))
+    min_confidence: float = float(os.getenv("MIN_CONFIDENCE", "0.80"))
 
 
 settings = Settings()

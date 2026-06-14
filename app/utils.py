@@ -48,6 +48,31 @@ def upload_prediction_log_to_s3() -> bool:
         return False
 
 
+def download_prediction_log_from_s3() -> bool:
+    """Restore the local prediction log from S3 if available.
+
+    Each prediction overwrites the S3 object with the current local file, so a
+    redeploy with an empty local file would otherwise erase prior history.
+    """
+    if not settings.prediction_bucket:
+        return False
+
+    local_path = Path(settings.prediction_log_path)
+    if local_path.exists():
+        return False
+
+    key = settings.prediction_bucket_key or local_path.name
+    local_path.parent.mkdir(parents=True, exist_ok=True)
+
+    try:
+        s3 = boto3.client("s3")
+        s3.download_file(settings.prediction_bucket, key, str(local_path))
+        return True
+    except (BotoCoreError, ClientError) as exc:
+        print(f"Warning: prediction log could not be restored from S3: {exc}")
+        return False
+
+
 def save_prediction_log(result: dict) -> dict:
     """Save the prediction locally and optionally synchronize it with S3."""
     append_prediction_log(result)

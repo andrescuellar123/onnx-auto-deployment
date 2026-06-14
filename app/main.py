@@ -1,13 +1,18 @@
 from fastapi import FastAPI, File, UploadFile
 
 from app.model import get_session, predict_image
-from app.utils import save_prediction_log
+from app.utils import download_prediction_log_from_s3, save_prediction_log
 
 app = FastAPI(
     title="ONNX Automatic Deployment API",
     description="FastAPI service for serving an externally stored ONNX model.",
     version="1.0.0",
 )
+
+
+@app.on_event("startup")
+def restore_prediction_log() -> None:
+    download_prediction_log_from_s3()
 
 
 @app.get("/")
@@ -35,10 +40,12 @@ def health() -> dict:
 async def predict(file: UploadFile = File(...)) -> dict:
     image_bytes = await file.read()
     prediction = predict_image(image_bytes)
-    log_info = save_prediction_log(prediction)
+    save_prediction_log(prediction)
 
     return {
         "filename": file.filename,
-        "prediction": prediction,
-        "log": log_info,
+        "prediction": {
+            "predicted_class_name": prediction["predicted_class_name"],
+            "confidence": prediction["confidence"],
+        },
     }

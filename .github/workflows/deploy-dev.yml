@@ -1,27 +1,25 @@
-name: Test, Build and Deploy DEV
+name: Deploy DEV
 
 on:
   push:
-    branches: ["dev"]
-
-permissions:
-  contents: read
-  packages: write
+    branches:
+      - dev
 
 jobs:
   test-build-deploy:
     runs-on: ubuntu-latest
 
     env:
-      APP_ENV: dev
-      MODEL_URL: ${{ secrets.MODEL_URL }}
+      # Model used by the test stage (can differ from the production MODEL_URL).
+      MODEL_URL: ${{ secrets.TEST_MODEL }}
       TEST_IMAGE_URL: ${{ secrets.TEST_IMAGE_URL }}
-      TEST_IMAGE_PATH: data/test/car_test.jpg
       PREDICTION_LOG_PATH: predictions_dev.txt
-      PREDICTION_BUCKET: ${{ secrets.PREDICTION_BUCKET }}
-      PREDICTION_BUCKET_KEY: predictions/predictions_dev.txt
-      MIN_CONFIDENCE: "0.10"
-      IMAGE_NAME: ghcr.io/${{ github.repository }}/onnx-api-dev:latest
+      # 235 = German shepherd. Must match the class predicted for TEST_IMAGE_URL.
+      EXPECTED_CLASS_IDS: "235"
+      # Needed by boto3 to fetch s3:// URIs (MODEL_URL/TEST_IMAGE_URL) in the test stage.
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
 
     steps:
       - name: Checkout repository
@@ -35,43 +33,43 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Download test data from external storage
+      - name: Download test data
         run: python scripts/download_test_data.py
 
-      - name: Run unit tests
-        run: pytest tests/ -q
+      - name: Run tests
+        run: pytest tests/
+        env:
+          PYTHONPATH: .
 
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v3
+      - name: Copy project to EC2
+        uses: appleboy/scp-action@v0.1.7
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "."
+          target: "~/onnx-auto-deployment-dev"
 
-      - name: Build Docker image
-        run: docker build -t $IMAGE_NAME .
-
-      - name: Push Docker image
-        run: docker push $IMAGE_NAME
-
-      - name: Deploy DEV container on cloud server
+      - name: Build and deploy DEV container
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-            docker pull ${{ env.IMAGE_NAME }}
+            cd ~/onnx-auto-deployment-dev
             docker stop onnx-api-dev || true
             docker rm onnx-api-dev || true
+            docker build -t onnx-api-dev .
             docker run -d \
               --name onnx-api-dev \
-              --restart unless-stopped \
               -p 8001:8000 \
-              -e APP_ENV=dev \
+              -e APP_ENV="dev" \
               -e MODEL_URL="${{ secrets.MODEL_URL }}" \
               -e PREDICTION_LOG_PATH="predictions_dev.txt" \
               -e PREDICTION_BUCKET="${{ secrets.PREDICTION_BUCKET }}" \
               -e PREDICTION_BUCKET_KEY="predictions/predictions_dev.txt" \
-              ${{ env.IMAGE_NAME }}
+              -e AWS_ACCESS_KEY_ID="${{ secrets.AWS_ACCESS_KEY_ID }}" \
+              -e AWS_SECRET_ACCESS_KEY="${{ secrets.AWS_SECRET_ACCESS_KEY }}" \
+              -e AWS_DEFAULT_REGION="${{ secrets.AWS_DEFAULT_REGION }}" \
+              onnx-api-dev
